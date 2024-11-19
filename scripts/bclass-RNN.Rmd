@@ -1,0 +1,158 @@
+---
+title: "bclass-RNN"
+author: "Navin Lo"
+date: "2024-11-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+## MODEL TRAINING (NN)
+######################
+library(tidyverse)
+library(tidymodels)
+library(keras)
+library(tensorflow)
+source('../scripts/preprocessing.R')
+
+# load cleaned data
+load('../data/claims-clean-example.RData')
+```
+
+```{r}
+# partition
+set.seed(110122)
+
+partitions <- claims_clean %>%
+  initial_split(prop = 0.8)
+
+train_text <- training(partitions) %>%
+  pull(text_clean)
+
+train_labels <- training(partitions) %>%
+  pull(bclass) %>%
+  as.numeric() - 1 %>%
+```
+
+```{r}
+# create a preprocessing layer
+
+model <- keras_model_sequential() %>%
+  layer_embedding(input_dim = 10000, output_dim = 128, input_length = 100) %>%
+  layer_simple_rnn(units = 64, return_sequences = FALSE) %>%
+  layer_dense(units = 2) %>%
+  layer_activation(activation = 'sigmoid')
+
+summary(model)
+
+model %>% compile(
+  loss = "binary_crossentropy",
+  optimizer = 'adam',
+  metrics = c("accuracy")
+)
+
+history <- model %>% fit(
+  x = train_text,
+  y = train_labels,
+  validation_split = 0.3,
+  epochs = 20,
+  batch_size = 32,
+)
+```
+
+```{r}
+load('data/claims-test.RData')
+load('data/claims-raw.RData')
+
+# apply preprocessing pipeline
+clean_df <- claims_test %>%
+  slice(1:100) %>%
+  parse_data() %>%
+  select(.id, text_clean)
+
+# grab input
+x <- clean_df %>%
+  pull(text_clean)
+
+# compute predictions
+preds <- predict(model, x) %>%
+  as.numeric()
+
+class_labels <- claims_raw %>% pull(bclass) %>% levels()
+
+pred_classes <- factor(preds > 0.5, labels = class_labels)
+
+pred_df <- clean_df %>%
+  bind_cols(bclass.pred = pred_classes) %>%
+  select(.id, bclass.pred)
+```
+
+
+```{r}
+# Tokenization
+tokenizer <- text_tokenizer(num_words = 5000)
+tokenizer %>% fit_text_tokenizer(claims_clean$text_clean)
+
+# Convert text to sequences
+sequences <- texts_to_sequences(tokenizer, claims_clean$text_clean)
+# Set sequence length
+maxlen <- 100 
+# Set equal length
+same_len_data <- pad_sequences(sequences, maxlen = maxlen)
+claims_clean <- claims_clean %>% 
+  mutate(sequences = same_len_data)
+
+# Encode binary label
+claims_clean <- claims_clean %>% 
+  mutate(y_binary = to_categorical(as.numeric(as.factor(claims_clean$bclass))-1))
+# Encode multiclass label
+claims_clean <- claims_clean %>% 
+  mutate(y_multiclass = to_categorical(as.numeric(as.factor(claims_clean$mclass))-1))
+
+# Train-test split
+set.seed(1)
+partition <- initial_split(claims_clean, prop = 0.8)  # 80% training, 20% testing
+train_data <- training(partition)
+test_data <- testing(partition)
+
+X_train <- train_data$sequences
+X_test <- test_data$sequences
+
+#Binary label
+y_train_binary <- train_data$y_binary
+y_test_binary <- test_data$y_binary
+
+#Multiclass label
+y_train_multiclass <- train_data$y_multiclass
+y_test_multiclass <- test_data$y_multiclass
+
+
+# Build RNN model for binary classification
+binary_model <- keras_model_sequential()
+binary_model %>%
+  layer_embedding(input_dim = 5000, output_dim = 128, input_length = maxlen) %>%  # Embedding layer
+  layer_simple_rnn(units = 64, return_sequences = FALSE) %>%  # RNN layer
+  layer_dense(units = 2) %>%  # Dense layer
+  layer_activation(activation = 'sigmoid')  # Activation layer
+
+summary(binary_model)
+
+binary_model %>% compile(
+  loss = 'binary_crossentropy',
+  optimizer = 'adam',
+  metrics = c('binary_accuracy')
+)
+
+
+# Train the binary classification model
+history_binary <- binary_model %>% fit(
+  X_train, y_train_binary,
+  validation_split = 0.3,
+  epochs = 10,
+  batch_size = 32
+)
+```
+
