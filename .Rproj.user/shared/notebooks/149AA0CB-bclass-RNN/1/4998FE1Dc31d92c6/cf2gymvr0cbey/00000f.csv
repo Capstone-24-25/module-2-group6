@@ -1,0 +1,59 @@
+"0","# create a preprocessing layer"
+"0",""
+"0","model <- keras_model_sequential() %>%"
+"0","  layer_embedding(input_dim = 10000, output_dim = 128, input_length = 100) %>%"
+"0","  layer_simple_rnn(units = 64, return_sequences = FALSE) %>%"
+"0","  layer_dense(units = 2) %>%"
+"0","  layer_activation(activation = 'sigmoid')"
+"0",""
+"0","summary(model)"
+"1","Model: ""sequential""
+___________________________________________________________________________________________________________________________________________________
+ Layer (type)                                                     Output Shape                                              Param #                
+===================================================================================================================================================
+ embedding (Embedding)                                            (None, 100, 128)                                          1280000                
+ simple_rnn (SimpleRNN)                                           (None, 64)                                                12352                  
+ dense (Dense)                                                    (None, 2)                                                 130                    
+ activation (Activation)                                          (None, 2)                                                 0                      
+===================================================================================================================================================
+Total params: 1292482 (4.93 MB)
+Trainable params: 1292482 (4.93 MB)
+Non-trainable params: 0 (0.00 Byte)
+___________________________________________________________________________________________________________________________________________________
+"
+"0","model %>% compile("
+"0","  loss = ""binary_crossentropy"","
+"0","  optimizer = 'adam',"
+"0","  metrics = c(""accuracy"")"
+"0",")"
+"0",""
+"0","history <- model %>% fit("
+"0","  x = train_text,"
+"0","  y = train_labels,"
+"0","  validation_split = 0.3,"
+"0","  epochs = 20,"
+"0","  batch_size = 32,"
+"0",")"
+"1","Epoch 1/20
+"
+"2","Error in py_call_impl(callable, call_args$unnamed, call_args$named) : 
+  ValueError: in user code:
+
+<...truncated...>n train_step
+        y_pred = self(x, training=True)
+    File ""/Users/cnguyen/.virtualenvs/r-tensorflow/lib/python3.10/site-packages/keras/src/utils/traceback_utils.py"", line 70, in error_handler
+        raise e.with_traceback(filtered_tb) from None
+    File ""/Users/cnguyen/.virtualenvs/r-tensorflow/lib/python3.10/site-packages/keras/src/engine/input_spec.py"", line 235, in assert_input_compatibility
+        raise ValueError(
+
+    ValueError: Exception encountered when calling layer 'sequential' (type Sequential).
+    
+    Input 0 of layer ""simple_rnn"" is incompatible with the layer: expected ndim=3, found ndim=2. Full shape received: (None, 128)
+    
+    Call arguments received by layer 'sequential' (type Sequential):
+      • inputs=tf.Tensor(shape=(None,), dtype=string)
+      • training=True
+      • mask=None
+
+[90mRun ]8;;rstudio:run:reticulate::py_last_error()`reticulate::py_last_error()`]8;; for details.[39m
+"
