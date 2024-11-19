@@ -38,6 +38,36 @@ parse_data <- function(.df){
   return(out)
 }
 
+# function to parse html and clean text with headers
+parse_fn_w_h <- function(.html){
+  read_html(.html) %>%
+    html_elements('p, h1, h2, h3, h4, h5, h6') %>%
+    html_text2() %>%
+    str_c(collapse = ' ') %>%
+    rm_url() %>%
+    rm_email() %>%
+    str_remove_all('\'') %>%
+    str_replace_all(paste(c('\n', 
+                            '[[:punct:]]', 
+                            'nbsp', 
+                            '[[:digit:]]', 
+                            '[[:symbol:]]'),
+                          collapse = '|'), ' ') %>%
+    str_replace_all("([a-z])([A-Z])", "\\1 \\2") %>%
+    tolower() %>%
+    str_replace_all("\\s+", " ")
+}
+
+# function to apply to claims data
+parse_data_w_h <- function(.df){
+  out <- .df %>%
+    filter(str_detect(text_tmp, '<!')) %>%
+    rowwise() %>%
+    mutate(text_clean = parse_fn_w_h(text_tmp)) %>%
+    unnest(text_clean) 
+  return(out)
+}
+
 nlp_fn <- function(parse_data.out){
   out <- parse_data.out %>% 
     unnest_tokens(output = token, 
