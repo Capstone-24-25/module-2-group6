@@ -1,4 +1,14 @@
-load('~/Documents/GitHub/module-2-group6/data/claims-clean-w-headers.RData')
+library(tidyverse)
+library(keras)
+library(tensorflow)
+library(dplyr)
+library(tidymodels)
+
+# Set module-2-group6 as your working dir
+load("./data/claims-clean-w-headers.RData")
+load("./data/claims-clean-example.RData")
+source("./scripts/preprocessing.R")
+
 set.seed(123)
 
 tokenizer <- text_tokenizer(num_words = 1000)
@@ -54,7 +64,6 @@ binary_model %>% compile(
   optimizer = optimizer_adam(learning_rate = 0.001),
   metrics = c('binary_accuracy')
 )
-
 
 # Train the binary classification model
 history_binary <- binary_model %>% fit(
