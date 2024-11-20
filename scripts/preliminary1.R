@@ -57,7 +57,7 @@ train <- train_labels %>%
   transmute(bclass = factor(bclass)) %>%
   bind_cols(train_dtm_projected)
 
-fit <- glm(bclass ~ ., data = train, family = binomial)
+fit_h <- glm(bclass ~ ., data = train, family = binomial)
 
 
 # Comparing With Headers to Without
@@ -95,3 +95,60 @@ train_n_h <- train_labels_n_h %>%
 
 fit_n_h <- glm(bclass ~ ., data = train_n_h, family = binomial)
 
+# We have fit_h which included the headers and fit_n_h that does not have any header info
+# Now we must compare the two
+
+# Testing with the headers:
+
+# project test data onto PCs
+test_dtm_projected <- reproject_fn(.dtm = test_dtm, proj_out)
+
+# compute predicted probabilities
+preds <- predict(fit_h, 
+                 newdata = test_dtm_projected,
+                 type = 'response')
+
+# store predictions in a data frame with true labels
+pred_df <- test_labels %>%
+  transmute(bclass = factor(bclass)) %>%
+  bind_cols(pred = as.numeric(preds)) %>%
+  mutate(bclass.pred = factor(pred > 0.5, 
+                              labels = levels(bclass)))
+
+# Testing without the headers:
+
+# project test data onto PCs
+test_dtm_projected_n_h <- reproject_fn(.dtm = test_dtm_n_h, proj_out_n_h)
+
+# compute predicted probabilities
+preds_n_h <- predict(fit_n_h,  
+                 newdata = test_dtm_projected_n_h,
+                 type = 'response')
+
+# store predictions in a data frame with true labels
+pred_df_n_h <- test_labels_n_h %>%
+  transmute(bclass = factor(bclass)) %>%
+  bind_cols(pred_n_h = as.numeric(preds_n_h)) %>%
+  mutate(bclass.pred_n_h = factor(pred_n_h > 0.5, 
+                              labels = levels(bclass)))
+
+
+# The comparison
+
+# define classification metric panel 
+panel <- metric_set(sensitivity, 
+                    specificity, 
+                    accuracy, 
+                    roc_auc)
+
+# compute test set accuracy for with headers
+pred_df %>% panel(truth = bclass, 
+                  estimate = bclass.pred, 
+                  pred, 
+                  event_level = 'second')
+
+# compute test set accuracy for without headers
+pred_df_n_h %>% panel(truth = bclass, 
+                  estimate = bclass.pred_n_h, 
+                  pred_n_h, 
+                  event_level = 'second')
