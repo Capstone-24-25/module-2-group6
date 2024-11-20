@@ -155,5 +155,46 @@ history_binary <- binary_model %>% fit(
   epochs = 10,
   batch_size = 32
 )
+
+multiclass_model <- keras_model_sequential()
+multiclass_model %>% 
+  layer_embedding(input_dim = 5000, output_dim = 128, input_length = maxlen) %>%  # Embedding layer
+  layer_lstm(units = 64, dropout = 0.2, recurrent_dropout = 0.2) %>% 
+  layer_dense(units = 2) %>%  # Dense layer
+  layer_dropout(rate = 0.3) %>% 
+  layer_activation(activation = 'softmax')  # Activation layer
+multiclass_model %>% compile(
+  loss = 'categorical_crossentropy',
+  optimizer = optimizer_adam(learning_rate = 0.001),
+  metrics = c('binary_accuracy')
+)
+history_binary <- multiclass_model %>% fit(
+  X_train, y_train_multiclass,
+  validation_split = 0.3,
+  epochs = 10,
+  batch_size = 32
+)
+
+```
+
+```{r}
+multiclass_model <- keras_model_sequential()
+multiclass_model %>% 
+  layer_embedding(input_dim = 5000, output_dim = 128, input_length = maxlen) %>%  # Embedding layer
+  layer_lstm(units = 64, dropout = 0.2, recurrent_dropout = 0.2) %>% 
+  layer_dense(units = 5) %>%  # Dense layer
+  layer_dropout(rate = 0.3) %>% 
+  layer_activation(activation = 'softmax')  # Activation layer
+multiclass_model %>% compile(
+  loss = 'categorical_crossentropy',
+  optimizer = optimizer_adam(learning_rate = 0.001),
+  metrics = c('binary_accuracy')
+)
+history_binary <- multiclass_model %>% fit(
+  X_train, y_train_multiclass,
+  validation_split = 0.3,
+  epochs = 10,
+  batch_size = 32
+)
 ```
 

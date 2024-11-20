@@ -34,7 +34,7 @@ train_text <- training(partitions) %>%
 
 train_labels <- training(partitions) %>%
   pull(bclass) %>%
-  as.numeric() - 1 %>%
+  as.numeric() - 1 
 ```
 
 ```{r}
@@ -64,8 +64,8 @@ history <- model %>% fit(
 ```
 
 ```{r}
-load('data/claims-test.RData')
-load('data/claims-raw.RData')
+load('~/Documents/GitHub/module-2-group6/data/claims-test.RData')
+load('~/Documents/GitHub/module-2-group6/data/claims-raw.RData')
 
 # apply preprocessing pipeline
 clean_df <- claims_test %>%
@@ -99,7 +99,7 @@ tokenizer %>% fit_text_tokenizer(claims_clean$text_clean)
 # Convert text to sequences
 sequences <- texts_to_sequences(tokenizer, claims_clean$text_clean)
 # Set sequence length
-maxlen <- 100 
+maxlen <- 1000
 # Set equal length
 same_len_data <- pad_sequences(sequences, maxlen = maxlen)
 claims_clean <- claims_clean %>% 
@@ -134,15 +134,16 @@ y_test_multiclass <- test_data$y_multiclass
 binary_model <- keras_model_sequential()
 binary_model %>%
   layer_embedding(input_dim = 5000, output_dim = 128, input_length = maxlen) %>%  # Embedding layer
-  layer_simple_rnn(units = 64, return_sequences = FALSE) %>%  # RNN layer
+  layer_lstm(units = 64, dropout = 0.2, recurrent_dropout = 0.2) %>% 
   layer_dense(units = 2) %>%  # Dense layer
+  layer_dropout(rate = 0.3) %>% 
   layer_activation(activation = 'sigmoid')  # Activation layer
 
 summary(binary_model)
 
 binary_model %>% compile(
   loss = 'binary_crossentropy',
-  optimizer = 'adam',
+  optimizer = optimizer_adam(learning_rate = 0.001),
   metrics = c('binary_accuracy')
 )
 
@@ -150,6 +151,47 @@ binary_model %>% compile(
 # Train the binary classification model
 history_binary <- binary_model %>% fit(
   X_train, y_train_binary,
+  validation_split = 0.3,
+  epochs = 10,
+  batch_size = 32
+)
+
+multiclass_model <- keras_model_sequential()
+multiclass_model %>% 
+  layer_embedding(input_dim = 5000, output_dim = 128, input_length = maxlen) %>%  # Embedding layer
+  layer_lstm(units = 64, dropout = 0.2, recurrent_dropout = 0.2) %>% 
+  layer_dense(units = 2) %>%  # Dense layer
+  layer_dropout(rate = 0.3) %>% 
+  layer_activation(activation = 'softmax')  # Activation layer
+multiclass_model %>% compile(
+  loss = 'categorical_crossentropy',
+  optimizer = optimizer_adam(learning_rate = 0.001),
+  metrics = c('binary_accuracy')
+)
+history_binary <- multiclass_model %>% fit(
+  X_train, y_train_multiclass,
+  validation_split = 0.3,
+  epochs = 10,
+  batch_size = 32
+)
+
+```
+
+```{r}
+multiclass_model <- keras_model_sequential()
+multiclass_model %>% 
+  layer_embedding(input_dim = 5000, output_dim = 128, input_length = maxlen) %>%  # Embedding layer
+  layer_lstm(units = 64, dropout = 0.2, recurrent_dropout = 0.2) %>% 
+  layer_dense(units = 5) %>%  # Dense layer
+  layer_dropout(rate = 0.3) %>% 
+  layer_activation(activation = 'softmax')  # Activation layer
+multiclass_model %>% compile(
+  loss = 'categorical_crossentropy',
+  optimizer = optimizer_adam(learning_rate = 0.001),
+  metrics = c('binary_accuracy')
+)
+history_binary <- multiclass_model %>% fit(
+  X_train, y_train_multiclass,
   validation_split = 0.3,
   epochs = 10,
   batch_size = 32
