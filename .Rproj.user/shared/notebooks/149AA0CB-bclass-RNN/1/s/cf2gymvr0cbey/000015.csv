@@ -1,0 +1,55 @@
+"0","# create a preprocessing layer"
+"0",""
+"0","model <- keras_model_sequential() %>%"
+"0","  layer_embedding(input_dim = 10000, output_dim = 128, input_length = 100) %>%"
+"0","  layer_dense(units = 1) %>%"
+"0","  layer_activation(activation = 'sigmoid')"
+"0",""
+"0","summary(model)"
+"1","Model: ""sequential_26""
+___________________________________________________________________________________________________________________________________________________
+ Layer (type)                                                     Output Shape                                              Param #                
+===================================================================================================================================================
+ embedding_26 (Embedding)                                         (None, 100, 128)                                          1280000                
+ dense_30 (Dense)                                                 (None, 100, 1)                                            129                    
+ activation_21 (Activation)                                       (None, 100, 1)                                            0                      
+===================================================================================================================================================
+Total params: 1280129 (4.88 MB)
+Trainable params: 1280129 (4.88 MB)
+Non-trainable params: 0 (0.00 Byte)
+___________________________________________________________________________________________________________________________________________________
+"
+"0","model %>% compile("
+"0","  loss = ""binary_crossentropy"","
+"0","  optimizer = 'adam',"
+"0","  metrics = c(""accuracy"")"
+"0",")"
+"0",""
+"0","history <- model %>% fit("
+"0","  x = train_text,"
+"0","  y = train_labels,"
+"0","  validation_split = 0.3,"
+"0","  epochs = 20,"
+"0","  batch_size = 32,"
+"0",")"
+"1","Epoch 1/20
+"
+"2","2024-11-19 19:59:12.153315: W tensorflow/core/framework/op_kernel.cc:1816] OP_REQUIRES failed at cast_op.cc:122 : UNIMPLEMENTED: Cast string to float is not supported
+"
+"2","Error in py_call_impl(callable, call_args$unnamed, call_args$named) : 
+  tensorflow.python.framework.errors_impl.UnimplementedError: Graph execution error:
+
+<...truncated...>ensorflow/lib/python3.10/site-packages/keras/src/utils/traceback_utils.py"", line 96, in error_handler
+
+  File ""/Users/cnguyen/.virtualenvs/r-tensorflow/lib/python3.10/site-packages/keras/src/engine/sequential.py"", line 398, in call
+
+  File ""/Users/cnguyen/.virtualenvs/r-tensorflow/lib/python3.10/site-packages/keras/src/engine/functional.py"", line 515, in call
+
+  File ""/Users/cnguyen/.virtualenvs/r-tensorflow/lib/python3.10/site-packages/keras/src/engine/functional.py"", line 654, in _run_internal_graph
+
+  File ""/Users/cnguyen/.virtualenvs/r-tensorflow/lib/python3.10/site-packages/keras/src/engine/functional.py"", line 751, in _conform_to_reference_input
+
+Cast string to float is not supported
+	 [[{{node sequential_26/Cast}}]] [Op:__inference_train_function_108522]
+[90mRun ]8;;rstudio:run:reticulate::py_last_error()`reticulate::py_last_error()`]8;; for details.[39m
+"

@@ -65,7 +65,9 @@ history <- model %>% fit(
 
 ```{r}
 load('~/Documents/GitHub/module-2-group6/data/claims-test.RData')
-load('~/Documents/GitHub/module-2-group6/data/claims-raw.RData')
+load('~/Documents/GitHub/module-2-group6/data/claims-clean-w-headers.RData')
+
+claims_clean <- nlp_fn(claims_clean_w_h)
 
 # apply preprocessing pipeline
 clean_df <- claims_test %>%
@@ -92,29 +94,30 @@ pred_df <- clean_df %>%
 
 
 ```{r}
-# Tokenization
-tokenizer <- text_tokenizer(num_words = 5000)
-tokenizer %>% fit_text_tokenizer(claims_clean$text_clean)
+load('~/Documents/GitHub/module-2-group6/data/claims-clean-w-headers.RData')
+
+tokenizer <- text_tokenizer(num_words = 1000)
+tokenizer %>% fit_text_tokenizer(claims_clean_w_h$text_clean)
 
 # Convert text to sequences
-sequences <- texts_to_sequences(tokenizer, claims_clean$text_clean)
+sequences <- texts_to_sequences(tokenizer, claims_clean_w_h$text_clean)
 # Set sequence length
 maxlen <- 1000
 # Set equal length
 same_len_data <- pad_sequences(sequences, maxlen = maxlen)
-claims_clean <- claims_clean %>% 
+claims_clean_w_h <- claims_clean_w_h %>% 
   mutate(sequences = same_len_data)
 
 # Encode binary label
-claims_clean <- claims_clean %>% 
-  mutate(y_binary = to_categorical(as.numeric(as.factor(claims_clean$bclass))-1))
+claims_clean_w_h <- claims_clean_w_h %>% 
+  mutate(y_binary = to_categorical(as.numeric(as.factor(claims_clean_w_h$bclass))-1))
 # Encode multiclass label
-claims_clean <- claims_clean %>% 
-  mutate(y_multiclass = to_categorical(as.numeric(as.factor(claims_clean$mclass))-1))
+claims_clean_w_h <- claims_clean_w_h %>% 
+  mutate(y_multiclass = to_categorical(as.numeric(as.factor(claims_clean_w_h$mclass))-1))
 
 # Train-test split
 set.seed(1)
-partition <- initial_split(claims_clean, prop = 0.8)  # 80% training, 20% testing
+partition <- initial_split(claims_clean_w_h, prop = 0.8)  # 80% training, 20% testing
 train_data <- training(partition)
 test_data <- testing(partition)
 
@@ -160,7 +163,7 @@ multiclass_model <- keras_model_sequential()
 multiclass_model %>% 
   layer_embedding(input_dim = 5000, output_dim = 128, input_length = maxlen) %>%  # Embedding layer
   layer_lstm(units = 64, dropout = 0.2, recurrent_dropout = 0.2) %>% 
-  layer_dense(units = 2) %>%  # Dense layer
+  layer_dense(units = 5) %>%  # Dense layer
   layer_dropout(rate = 0.3) %>% 
   layer_activation(activation = 'softmax')  # Activation layer
 multiclass_model %>% compile(
@@ -174,7 +177,6 @@ history_binary <- multiclass_model %>% fit(
   epochs = 10,
   batch_size = 32
 )
-
 ```
 
 ```{r}
