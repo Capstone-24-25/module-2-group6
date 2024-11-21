@@ -48,3 +48,6 @@ Summarize the neural network model you trained by desribing:
 -   training epochs
 
 -   predictive accuracy
+
+
+The architecture of the neural network model includes an embedding layer (with input dimensions of 5000, output dimensions of 128, and input length of 1000), a single LSTM layer with 64 units with a dropout of 0.2 to prevent overfitting.  The binary model utilized a dense layer with 2 units, a dropout layer of 0.3 and a sigmoid function while the multiclass model utilized a dense layer of 5 units, a dropout layer of 0.3, and a softmax function.  The model utilized an Adam optimizer, and the binary model utilized a binary-cross-entropy loss function while the multiclass model utilized a categorical cross-entropy loss function.  Both models trained for 10 epochs with a batch size of 32, with a 30% training data for validation.  The binary model achieved a predictive accuracy of 76.8%, while the multiclass model achieved a predictive accuracy of 88.8%.
