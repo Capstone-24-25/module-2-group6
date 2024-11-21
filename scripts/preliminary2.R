@@ -16,7 +16,10 @@ source(paste(url, 'projection-functions.R', sep = ''))
 
 # load raw data
 load('data/claims-clean-example.RData')
-load('data/proj_out.RData')
+
+# Removing url2328 since the text_clean is just one word
+claims_clean <- claims_clean %>%
+  filter(.id != "url2328")
 
 words_processed <- nlp_fn(claims_clean)
 
@@ -43,16 +46,89 @@ word_predict <- predict(fit,
                      newdata = dtm_projected,
                      type = 'link')
 
-word_predict_link <- cbind(words_labels, word_predict)
+word_predict_df <- cbind(words_labels, word_predict)
+  
+# Lemmatize both words in the bigram
+bigrams_words <- nlp_fn_bigrams(claims_clean)
 
-bigram_processed <- nlp_fn_bigrams(claims_clean)
+'''
+# partition data
+set.seed(102722)
+partitions <- bigrams_words %>% initial_split(prop = 0.8)
 
-bigram_processed_data <- bigram_processed %>%
+# separate DTM from labels
+test_dtm <- testing(partitions) %>%
   select(-.id, -bclass)
+test_labels <- testing(partitions) %>%
+  select(.id, bclass)
 
-bigram_labels <- bigram_processed %>%
+# same, training set
+train_dtm <- training(partitions) %>%
+  select(-.id, -bclass)
+train_labels <- training(partitions) %>%
+  select(.id, bclass)
+'''
+# separate DTM from labels
+data_dtm <- bigrams_words %>%
+  select(-.id, -bclass)
+data_labels <- bigrams_words %>%
   select(.id, bclass)
 
 # find projections based on training data
-proj_out_bigram <- projection_fn(.dtm = bigram_processed_data, .prop = 0.7)
-dtm_projected <- proj_out_bigram$data
+proj_out_bigrams <- projection_fn(.dtm = data_dtm, .prop = 0.7)
+dtm_projected_bigrams <- proj_out_bigrams$data
+
+# create training matrix
+bigrams_data <- data_labels %>%
+  transmute(bclass = factor(bclass)) %>%
+  bind_cols(dtm_projected_bigrams) %>%
+  bind_cols(word_predict)
+
+# partition data
+set.seed(102722)
+partition <- bigrams_data %>% initial_split(prop = 0.8)
+
+# separate DTM from labels
+test_dtm <- testing(partition) %>%
+  select(-bclass)
+test_labels <- testing(partition) %>%
+  select(bclass)
+
+# same, training set
+train_dtm <- training(partition) %>%
+  select(-bclass)
+train_labels <- training(partition) %>%
+  select(bclass)
+
+# create training matrix
+train_df <- train_labels %>%
+  transmute(bclass = factor(bclass)) %>%
+  bind_cols(train_dtm)
+
+fit_bigram <- glm(bclass ~ ., data = train_df, family = binomial)
+
+# compute predicted probabilities
+preds <- predict(fit_bigram,  
+                     newdata = test_dtm,
+                     type = 'response')
+
+# store predictions in a data frame with true labels
+pred <- test_labels %>%
+  transmute(bclass = factor(bclass)) %>%
+  bind_cols(pred = as.numeric(preds)) %>%
+  mutate(bclass.pred = factor(pred > 0.5, 
+                                  labels = levels(bclass)))
+
+panel <- metric_set(sensitivity, 
+                    specificity, 
+                    accuracy, 
+                    roc_auc)
+
+# compute test set accuracy for with headers
+pred %>% panel(truth = bclass, 
+                  estimate = bclass.pred, 
+                  pred, 
+                  event_level = 'second')
+
+in_words <- words_labels %>%
+  anti_join(bigrams_words_labels, by = '.id')
