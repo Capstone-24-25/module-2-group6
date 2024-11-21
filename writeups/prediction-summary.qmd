@@ -1,6 +1,6 @@
 ---
 title: "Predictive modeling of claims status"
-author: 'YOUR NAMES HERE'
+author: 'Navin Lo, Colin Nguyen, Owen Philliber, Pramukh Shankar'
 date: today
 ---
 
@@ -8,7 +8,7 @@ date: today
 
 Provide a 3-5 sentence summary of your work on the primary task. Indicate what input data was used, what method was used for binary class predictions, what method was used for multiclass predictions, and what estimated accuracies were achieved.
 
-> *Header and paragraph content was scraped from the raw webpages and processed into term frequencies of word tokens. For binary classification, a two-layer neural network yielded an estimated 81.4% accuracy; for multiclass classification, a support vector machine gave 78% accuracy.*
+**Header and paragraph content was scraped from the raw webpages and processed into term frequencies of word frequencies. The model preprocessing tokenized text data with sequences, with each token being mapped to a dense vector reprsentation via an embedding layer. In terms of modeling, both binary and multiclass predictions utilized sequential neural networks, one with two output numbers (output) and one with 5 output numbers (multiclass). These predictions were used to determine whether or not claims could be fraud-inducing. The binary classification reached an accuracy of around 74% validation accuracy, while the multiclass classification reached an accuracy of close to 90% validation accuracy.  
 
 ### Preprocessing
 
@@ -20,6 +20,14 @@ In one paragraph lay out your preprocessing pipeline. No need to provide exact s
 
 -   how cleaned text was represented quantitatively
 
+**Text data was extracted from HTML elements, focusing on paragraph tags and headers. This process removed unnecessary elements like URLs, email addresses, punctuation, symbols, digits, and others, to only retain clean text. The text cleaning process applied transformations like:**
+
+**- converting all characters to lower case**
+
+**- replacing line breaks and extra spaces with single spaces.**
+
+**- removing stopwords and lemmatized words to reduce them into their root forms.**
+
 ### Methods
 
 Describe your final predictive models. Include one paragraph with details on the binary classification approach, and one on the multiclass approach. Include for each:
@@ -30,8 +38,31 @@ Describe your final predictive models. Include one paragraph with details on the
 
 -   training method
 
+
+**The binary classification model uses a Recurrent Neural Network (RNN) with a Long Short-Term Memory (LSTM) layer to predict between the two classes. The architecture includes an embedding layer that maps tokens to dense vector representations, followed by an LSTM layer with 64 units to capture sequential dependencies in the text. The dense output layer consists of 2 units with a sigmoid activation function, which outputs probabilities for each class. Key hyperparameters, such as a dropout rate of 0.2 for regularization and an Adam optimizer with a learning rate of 0.001, were selected to prevent overfitting and ensure efficient learning. The model was then trained using the binary cross-entropy loss function, which a validation split of 30% and 10 epochs, achieving a validation accuracy of 74%.**
+
+**The multiclass classification model also uses a RNN-based architecture with an LSTM layer designed to predict between the five classes. It has a very similar structure to the binary model, with an embedding layer followed by a 64-unit LSTM layer. In terms of hyperparameters, it was nearly identical to the binary model, just using a categorical cross-entropy loss function instead of binary. It also utilized a 30% validation split and 10 epochs, reaching a validation accuracy of just about 90%.**
+
+
 ### Results
 
 Indicate the predictive accuracy of the binary classifications and the multiclass classifications. Provide a table for each, and report sensitivity, specificity, and accuracy.[^1]
 
 [^1]: Read [this article](https://yardstick.tidymodels.org/articles/multiclass.html) on multiclass averaging.
+
+**Binary classification:**
+
+| .metric     | .estimator | .estimate |
+|-------------|------------|-----------|
+| sensitivity | binary     | 0.832     |
+| specificity | binary     | 0.699     |
+| accuracy    | binary     | 0.768     |
+
+
+**Multiclass classification**
+
+| .metric     | .estimator | .estimate |
+|-------------|------------|-----------|
+| sensitivity | macro      | 0.895     |
+| specificity | macro      | 0.919     |
+| accuracy    | multiclass | 0.888     |
