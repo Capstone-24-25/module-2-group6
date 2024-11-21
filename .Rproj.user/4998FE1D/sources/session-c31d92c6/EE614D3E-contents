@@ -94,7 +94,7 @@ pred_df <- clean_df %>%
 
 
 ```{r}
-load('~/Documents/GitHub/module-2-group6/data/claims-clean-w-headers.RData')
+load("../data/claims-clean-w-headers.RData")
 
 tokenizer <- text_tokenizer(num_words = 1000)
 tokenizer %>% fit_text_tokenizer(claims_clean_w_h$text_clean)
