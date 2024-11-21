@@ -8,9 +8,34 @@ date: today
 
 Does including header content improve predictions? Answer the question and provide quantitative evidence supporting your answer.
 
+We found that the header content does not improve predictions. Below are the metrics for the model with header content and the model without the header content.
+
+```{r, echo = FALSE}
+load('../data/metrics-with-headers.RData')
+load('../data/metrics-without-headers.RData')
+print('Metrics for Model with Headers')
+metrics_with_headers
+print('Metrics for Model without Headers')
+metrics_without_headers
+```
+
+As we can see, the metrics for the model without headers has an accuracy around 82.03%, while the model with headers has an accuracy around 77.62%. While all the metrics are close, it does not justify adding the headers to our data.
+
 ### Bigrams
 
 Do bigrams capture additional information relevant to the classification of interest? Answer the question, **briefly** describe what analysis you conducted to arrive at your answer, and provide quantitative evidence supporting your answer.
+
+We found that bigrams do not capture additional information relevant to the classification of interest. Below are the metrics for the model with only word data and the model with the bigrams and the word data.
+
+```{r, echo = FALSE}
+load('../data/metrics-with-bigrams.RData')
+print('Metrics for Model with only Words')
+metrics_without_headers
+print('Metrics for Model with Bigrams and Words')
+metrics_with_bigrams
+```
+
+As we can see, every metric above actually decreases with bigrams except sensitivity, so we concluded that adding the bigrams is not effective for this classification.
 
 ### Neural net
 

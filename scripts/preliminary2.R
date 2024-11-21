@@ -51,23 +51,6 @@ word_predict_df <- cbind(words_labels, word_predict)
 # Lemmatize both words in the bigram
 bigrams_words <- nlp_fn_bigrams(claims_clean)
 
-'''
-# partition data
-set.seed(102722)
-partitions <- bigrams_words %>% initial_split(prop = 0.8)
-
-# separate DTM from labels
-test_dtm <- testing(partitions) %>%
-  select(-.id, -bclass)
-test_labels <- testing(partitions) %>%
-  select(.id, bclass)
-
-# same, training set
-train_dtm <- training(partitions) %>%
-  select(-.id, -bclass)
-train_labels <- training(partitions) %>%
-  select(.id, bclass)
-'''
 # separate DTM from labels
 data_dtm <- bigrams_words %>%
   select(-.id, -bclass)
@@ -125,10 +108,12 @@ panel <- metric_set(sensitivity,
                     roc_auc)
 
 # compute test set accuracy for with headers
-pred %>% panel(truth = bclass, 
+metrics_with_bigrams <- pred %>% panel(truth = bclass, 
                   estimate = bclass.pred, 
                   pred, 
                   event_level = 'second')
+
+save(metrics_with_bigrams, file = 'data/metrics-with-bigrams.RData')
 
 in_words <- words_labels %>%
   anti_join(bigrams_words_labels, by = '.id')
