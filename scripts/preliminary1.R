@@ -59,6 +59,7 @@ train <- train_labels %>%
 
 fit_h <- glm(bclass ~ ., data = train, family = binomial)
 
+save(fit_h, file = 'results/binomial-fit-headers.RData')
 
 # Comparing With Headers to Without
 load('data/claims-clean-example.RData')
@@ -94,6 +95,9 @@ train_n_h <- train_labels_n_h %>%
   bind_cols(train_dtm_projected_n_h)
 
 fit_n_h <- glm(bclass ~ ., data = train_n_h, family = binomial)
+
+
+save(fit_n_h, file = 'results/binomial-fit-no-headers.RData')
 
 # We have fit_h which included the headers and fit_n_h that does not have any header info
 # Now we must compare the two

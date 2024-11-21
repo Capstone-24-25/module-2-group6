@@ -90,6 +90,8 @@ train_df <- train_labels %>%
 
 fit_bigram <- glm(bclass ~ ., data = train_df, family = binomial)
 
+save(fit_bigram, file = 'results/binomial-fit-with-bigram.RData')
+
 # compute predicted probabilities
 preds <- predict(fit_bigram,  
                      newdata = test_dtm,
