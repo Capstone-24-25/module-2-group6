@@ -142,13 +142,17 @@ panel <- metric_set(sensitivity,
                     roc_auc)
 
 # compute test set accuracy for with headers
-pred_df %>% panel(truth = bclass, 
+metrics_with_headers <- pred_df %>% panel(truth = bclass, 
                   estimate = bclass.pred, 
                   pred, 
                   event_level = 'second')
 
 # compute test set accuracy for without headers
-pred_df_n_h %>% panel(truth = bclass, 
+metrics_without_headers <- pred_df_n_h %>% panel(truth = bclass, 
                   estimate = bclass.pred_n_h, 
                   pred_n_h, 
                   event_level = 'second')
+
+save(metrics_with_headers, file = 'data/metrics-with-headers.RData')
+save(metrics_without_headers, file = 'data/metrics-without-headers.RData')
+
